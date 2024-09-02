@@ -13,7 +13,7 @@ from io import BytesIO
 def get_sensor_data():
     try:
         # Utiliser l'URL correcte pour récupérer les données
-        response = requests.get("http://192.168.174.45:8000/get_data/")
+        response = requests.get("http://192.168.100.77:8000/get_data/")
         response.raise_for_status()
         data = response.json()
         # Assurez-vous que les données sont au format liste de dictionnaires
@@ -26,7 +26,7 @@ def get_sensor_data():
         return []
 
 # Function to generate PDF report
-def generate_pdf_report(selected_date, total_energy, operating_time, data_report_list):
+def generate_pdf_report(selected_date, daily_produced_energy, operating_time, data_report_list):
     pdf = FPDF()
     pdf.add_page()
 
@@ -49,7 +49,7 @@ def generate_pdf_report(selected_date, total_energy, operating_time, data_report
     pdf.cell(0, 10, txt=f"Creation date: {timestamp}", ln=True, align='L')
     pdf.cell(0, 10, txt=f"Selected date: {selected_date}", ln=True, align='L')
     pdf.cell(0, 10, txt=f"Operating time: {operating_time:.6f} H" if operating_time is not None else "Operating time: None", ln=True, align='L')
-    pdf.cell(0, 10, txt=f"Total energy: {total_energy:.6f} Wh" if total_energy is not None else "Total energy: None", ln=True, align='L')
+    pdf.cell(0, 10, txt=f"daily produced energy: {daily_produced_energy:.6f} Wh" if daily_produced_energy is not None else "Total energy: None", ln=True, align='L')
    
     # Table headers
     pdf.set_font("Arial", size=12, style='B')
@@ -251,8 +251,10 @@ def main3(d_p, b_p, t_p, h_p,l_p, coll2, col4_battery, col4_Temperature, col4_li
 
         # Filtrer les données pour n'inclure que celles du jour sélectionné
         df_filtered = df[(df['datetime'] >= start_of_day) & (df['datetime'] <= end_of_day)]
-
-        total_energy = df_filtered['total_energy'].dropna().iloc[-1] if not df_filtered['total_energy'].dropna().empty else None
+     
+        daily_energy_filtered = df_filtered['current_energy']
+        daily_produced_energy = daily_energy_filtered.sum() / 3600
+        daily_produced_energy = round(float(daily_produced_energy), 2)
         operating_time = df_filtered['operating_time'].dropna().iloc[-1] if not df_filtered['operating_time'].dropna().empty else None
 
         # Sélectionner uniquement les colonnes d'intérêt
@@ -333,7 +335,7 @@ def main3(d_p, b_p, t_p, h_p,l_p, coll2, col4_battery, col4_Temperature, col4_li
                     else:
                         h_p.success(f"💧 Humidity is within the safe range: {humidity}")
         # Generate PDF report
-        pdf_file = generate_pdf_report(selected_date, total_energy, operating_time, data_report_list)
+        pdf_file = generate_pdf_report(selected_date, daily_produced_energy, operating_time, data_report_list)
 
         # Ajouter un bouton de téléchargement pour le PDF
         with coll2:

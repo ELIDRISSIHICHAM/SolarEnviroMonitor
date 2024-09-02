@@ -135,7 +135,7 @@ def main_loop():
                     # Sélectionner les données du mois actuel
                     month_data = filtered_data[filtered_data['datetime'].dt.month == month_index]
                     # Calculer la somme de 'current_energy' pour ce mois
-                    month_sum = month_data['current_energy'].sum()
+                    month_sum = month_data['current_energy'].sum()/3600
                     # Ajouter la somme à la liste
                     monthly_sums.append(month_sum)
                 # Initialize the consumption list to store cumulative values
